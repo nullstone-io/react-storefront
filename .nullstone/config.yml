@@ -1,0 +1,52 @@
+version: "0.1"
+
+subdomains:
+  saleor-nullst-one:
+    dns_name: saleor
+    connections:
+      domain: nullst-one-domain
+  checkout-saleor-nullst-one:
+    dns_name: dashboard.saleor
+    connections:
+      domain: nullst-one-domain
+
+apps:
+  storefront:
+    module: nullstone/aws-fargate-service
+    vars:
+      command: ["sh", "-c '(nginx &) && pnpm turbo run start --filter=storefront...'"]
+      cpu: 256
+      memory: 512
+      port: 3000
+    environment:
+      BASE_DOMAIN: "saleor.{{ NULLSTONE_ENV }}.nullst.one"
+      SALEOR_API_URL: "https://api.{{ BASE_DOMAIN }}/graphql/" # handled by nginx
+      STOREFRONT_URL: "https://{{ BASE_DOMAIN }}"
+      CHECKOUT_APP_URL: "https://checkout.{{ BASE_DOMAIN }}"
+      CHECKOUT_STOREFRONT_URL: "{{ CHECKOUT_APP_URL }}/checkout-spa/"
+      CLOUD_DEPLOYMENT_URL: ""
+    capabilities:
+      - module: nullstone/aws-load-balancer
+        vars:
+          health_check_path: "/"
+        connections:
+          subdomain: saleor-nullst-one
+  checkout:
+    module: nullstone/aws-fargate-service
+    vars:
+      command: ["pnpm", "turbo", "run", "start", "--filter=saleor-app-checkout..."]
+      cpu: 256
+      memory: 512
+      port: 3001
+    environment:
+      BASE_DOMAIN: "{{ NULLSTONE_ENV }}.nullst.one"
+      SALEOR_API_URL: "http://api.{{ BASE_DOMAIN }}/graphql/" # handled by nginx
+      CHECKOUT_APP_URL: "https://checkout.{{ BASE_DOMAIN }}"
+      CHECKOUT_STOREFRONT_URL: "{{ CHECKOUT_APP_URL }}/checkout-spa/"
+      CLOUD_DEPLOYMENT_URL: ""
+    capabilities:
+      - module: nullstone/aws-load-balancer
+        vars:
+          health_check_path: "/"
+        connections:
+          subdomain: checkout-saleor-nullst-one
