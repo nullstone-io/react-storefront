@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y nginx jq
 COPY apps/storefront/nginx/dev.conf /etc/nginx/conf.d/default.conf
 
 COPY . .
+RUN chmod +x ./start-storefront.sh
 
 # Remove Cypress from dependencies
 RUN jq 'del(.devDependencies.cypress)' package.json > _.json && mv _.json package.json
