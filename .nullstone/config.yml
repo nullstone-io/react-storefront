@@ -1,14 +1,16 @@
 version: "0.1"
 
 subdomains:
-  saleor-nullst-one-subdomain:
+  saleor-subdomain:
+    module: nullstone/aws-subdomain
     dns_name: saleor
     connections:
-      domain: nullst-one-domain
-  checkout-saleor-nullst-one-subdomain:
-    dns_name: dashboard.saleor
+      domain: global.global.nullstone-cloud-domain
+  checkout-subdomain:
+    module: nullstone/aws-subdomain
+    dns_name: checkout.saleor
     connections:
-      domain: nullst-one-domain
+      domain: global.global.nullstone-cloud-domain
 
 apps:
   storefront:
@@ -30,7 +32,7 @@ apps:
         vars:
           health_check_path: "/"
         connections:
-          subdomain: saleor-nullst-one-subdomain
+          subdomain: saleor-subdomain
   checkout:
     module: nullstone/aws-fargate-service
     vars:
@@ -49,4 +51,4 @@ apps:
         vars:
           health_check_path: "/"
         connections:
-          subdomain: checkout-saleor-nullst-one-subdomain
+          subdomain: checkout-subdomain
